@@ -1,12 +1,12 @@
-import com.sun.net.httpserver.HttpServer;
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
-
 
 public class ItemServer {
     // Our "database" - a simple map from ID to item name
@@ -35,17 +35,37 @@ public class ItemServer {
         public void handle(HttpExchange exchange) throws IOException {
             String method = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
+            
+            System.out.println("Received " + method + "  " + path);
 
-            // Log each request to the console
-            System.out.println(method + " " + path);
-
-            if (!method.equals("GET")) {
+            if (method.equals("GET")) {
+                handleGet(exchange, path);
+            } else if (method.equals("POST") && path.equals("/items")) {
+                handlePost(exchange);
+            } else {
                 sendResponse(exchange, 405, "Method Not Allowed");
+            }
+        }
+        private void handlePost(HttpExchange exchange) throws IOException {
+            // Read request body
+            InputStream is = exchange.getRequestBody();
+            String body = new String(is.readAllBytes());
+            is.close();
+            
+            if (body.isEmpty()) {
+                sendResponse(exchange, 400, "Item name is required");
                 return;
             }
 
+            // Create new item with next ID
+            String id = String.valueOf(nextId++);
+            items.put(id, body.trim());
+
+            sendResponse(exchange, 201, "Created item " + id + ": " + body.trim());
+        }
+        private void handleGet(HttpExchange exchange, String path)
+                throws IOException {
             if (path.equals("/items")) {
-                // List all items
                 StringBuilder sb = new StringBuilder();
                 for (Map.Entry<String, String> entry : items.entrySet()) {
                     sb.append(entry.getKey())
@@ -55,17 +75,15 @@ public class ItemServer {
                 }
                 sendResponse(exchange, 200, sb.toString());
             } else if (path.matches("/items/\\d+")) {
-                // Get single item - extract ID from path
-                String id = path.substring(7); // Remove "/items/"
+                String id = path.substring("/items/".length());
                 String item = items.get(id);
-                
                 if (item != null) {
                     sendResponse(exchange, 200, id + ": " + item);
                 } else {
                     sendResponse(exchange, 404, "Item not found");
                 }
             } else {
-                sendResponse(exchange, 404, "Not Found");
+                sendResponse(exchange, 404, "Not found");
             }
         }
         private void sendResponse(HttpExchange exchange, int code,
