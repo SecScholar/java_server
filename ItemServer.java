@@ -39,21 +39,34 @@ public class ItemServer {
             // Log each request to the console
             System.out.println(method + " " + path);
 
-            if (method.equals("GET") && path.equals("/items")) {
-                // Build a string listing all items
+            if (!method.equals("GET")) {
+                sendResponse(exchange, 405, "Method Not Allowed");
+                return;
+            }
+
+            if (path.equals("/items")) {
+                // List all items
                 StringBuilder sb = new StringBuilder();
                 for (Map.Entry<String, String> entry : items.entrySet()) {
                     sb.append(entry.getKey())
-                      .append("")
+                      .append(": ")
                       .append(entry.getValue())
                       .append("\n");
                 }
                 sendResponse(exchange, 200, sb.toString());
+            } else if (path.matches("/items/\\d+")) {
+                // Get single item - extract ID from path
+                String id = path.substring(7); // Remove "/items/"
+                String item = items.get(id);
+                
+                if (item != null) {
+                    sendResponse(exchange, 200, id + ": " + item);
+                } else {
+                    sendResponse(exchange, 404, "Item not found");
+                }
             } else {
-                sendResponse(exchange, 404, "Not found");
+                sendResponse(exchange, 404, "Not Found");
             }
-
-            sendResponse(exchange, 200, "Items endpoint reached!");
         }
         private void sendResponse(HttpExchange exchange, int code,
                 String body) throws IOException {
