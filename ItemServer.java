@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.nio.channels.AcceptPendingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +31,7 @@ public class ItemServer {
     }
     static class HealthHandler implements HttpHandler {
         @Override
-        public void handle(HttpExchange, exchange) throws IOException {
+        public void handle(HttpExchange exchange) throws IOException {
             String response = "ok";
             exchange.sendResponseHeaders(200, response.length());
             OutputStream os = exchange.getResponseBody();
