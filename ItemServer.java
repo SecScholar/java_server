@@ -5,11 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.nio.channels.AcceptPendingException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ItemServer {
-
     // Our "database" - a simple map from ID to item name
     private static Map<String, String> items = new HashMap<>();
     private static int nextId = 1;
@@ -22,14 +22,24 @@ public class ItemServer {
         nextId = 4;
 
         HttpServer server = HttpServer.create(
-            new InetSocketAddress(8000), 0
+            new InetSocketAddress(4001), 0
         );
 
         server.createContext("/items", new ItemsHandler());
+        server.createContext("/health", new HealthHandler());
         server.start();
-        System.out.println("Server running on http://localhost:8000");
+        System.out.println("Server running on http://localhost:4001");
     }
-
+    static class HealthHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange, exchange) throws IOException {
+            String response = "ok";
+            exchange.sendResponseHeaders(200, response.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        }
+    }
     static class ItemsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -109,12 +119,11 @@ public class ItemServer {
                 String body) throws IOException {
                     // Tell clients this is JSON
                     exchange.getResponseHeaders().set("Content-Type", "application/json");
-
                     byte[] bytes = body.getBytes();
                     exchange.sendResponseHeaders(code, bytes.length);
                     OutputStream os = exchange.getResponseBody();
                     os.write(bytes);
                     os.close();
-                }
+            }
     }
 }
