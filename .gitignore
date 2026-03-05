@@ -1,0 +1,6 @@
+# Compuled java-server files
+*.class
+
+# Build output
+out/
+build/
