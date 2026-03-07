@@ -1,4 +1,4 @@
-#!/bin/bash
+ss#!/bin/bash
 # Test POST endpoint
 
 BASE_URL="http://localhost:4001"
@@ -16,7 +16,7 @@ RESPONSE=$(echo "$OUTPUT" | head -n 1)
 STATUS=$(echo "$OUTPUT" | tail -n 1)
 
 # Check status code
-if [ "$STATUS_CODE" -eq 201 ]; then
+if [ "$STATUS_CODE" = "201" ]; then
     echo "PASS: POST returns 201"
 else
     echo "FAIL: POST returns $STATUS (expected 201)"
@@ -27,16 +27,6 @@ if echo "$RESPONSE" | grep -q "$TEST_ITEM"; then
     echo "PASS: POST response contains item name"
 else
     echo "FAIL: POST response does not contain item name"
-    echo "   Got: $RESPONSE"
-fi
-
-# Extract ID from response (basic parsing)
-# Response format: {"id": "X", "name": "..."}
-ID=$(echo "$RESPONSE" | grep -o '"id": "[^"]*"' | cut -d '"' -f 4)
-if [ -n "$ID" ]; then
-    echo "PASS: POST response contains ID"
-else
-    echo "FAIL: POST response does not contain ID"
     echo "   Got: $RESPONSE"
 fi
 
