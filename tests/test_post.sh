@@ -1,4 +1,4 @@
-ss#!/bin/bash
+#!/bin/bash
 # Test POST endpoint
 
 BASE_URL="http://localhost:4001"
